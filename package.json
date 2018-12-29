@@ -1,11 +1,12 @@
 {
   "name": "add-arrow-img",
   "version": "0.1.0",
-  "private": true,
+  "main": "./dist/led-screen-set.common.js",
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint"
+    "lint": "vue-cli-service lint",
+    "build-bundle": "vue-cli-service build --target lib --name add-arrow-img ./src/libs/add-arrow-img/index.js"
   },
   "dependencies": {
     "vue": "^2.5.17"
@@ -17,6 +18,9 @@
     "babel-eslint": "^10.0.1",
     "eslint": "^5.8.0",
     "eslint-plugin-vue": "^5.0.0-0",
+    "less": "^3.9.0",
+    "less-loader": "^4.1.0",
+    "vue-highlightjs": "^1.3.3",
     "vue-template-compiler": "^2.5.17"
   },
   "eslintConfig": {
