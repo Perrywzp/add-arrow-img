@@ -3,14 +3,16 @@
     <div style="float: left; margin-left: 120px;">
       <p>经增加了箭头数据的图片, 进行了比例缩放处理，右侧是原图</p>
       <add-arrow-img
-      :width="layout.width"
-      :height="layout.height"
-      :src="data.src"
-      :drawType="data.drawType"
-      :line="data.line"
-      :polyLine="data.polyLine"
-      :direction="data.direction"
-    ></add-arrow-img>
+        :width="layout.width"
+        :height="layout.height"
+        :src="data.src"
+        :drawType="data.drawType"
+        :line="data.line"
+        :polyLine="data.polyLine"
+        :direction="data.direction"
+        :lineColor="lineColor"
+        :lineWidth="lineWidth"
+      ></add-arrow-img>
     </div>
     <div style="float: right; width: 1200px;">
       <img v-for="(item, index) in mocks" :src="item.src" :key="index">
