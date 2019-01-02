@@ -1,12 +1,25 @@
 <template>
-  <canvas ref="canvas">
-    Your browser does not support the HTML5 canvas tag.
-  </canvas>
+  <div class="arrow-img-box" :style="{width: width + 'px', height: height + 'px' , background: background}">
+    <img :src="compositeImage" :style="{width: imgSize.width + 'px', height: imgSize.height + 'px'}">
+  </div>
 </template>
 <script>
 export default {
   name: 'add-arrow-img',
   props: {
+    // 默认按16:9的比例设置
+    width: {
+      type: Number,
+      default: 640
+    },
+    height: {
+      type: Number,
+      default: 320
+    },
+    background: {
+      type: String,
+      default: '#333'
+    },
     src: {
       type: String,
       default: 'https://cdn.pixabay.com/photo/2018/07/08/01/44/mountains-3523153__340.jpg'
@@ -55,65 +68,60 @@ export default {
   },
   data() {
     return {
-      ctx: '',
+      compositeImage: '',
       imgSize: {
         width: 40,
         height: 40
       },
-      creatCanvas: false,
       img: ''
     }
   },
   watch: {
     src (val) {
-      this.creatCanvas = false
       this.loadImg(val)
-    },
-    creatCanvas (val) {
-      if(val) {
-        this.render()
-      }
     }
   },
   mounted() {
     this.loadImg(this.src)
   },
   methods: {
+    // 加载图片
+    loadImg (src) {
+      let img = this.img = document.createElement('img')
+      img.src = src
+      img.setAttribute("crossOrigin",'Anonymous')
+      img.onload = () => {
+        this.compositeImage = this.getBase64(img)
+        this.imgSize = this.calcRenderSize(this.width, this.height, img.width, img.height)
+      }
+    },
     // 绘制图
-    render () {
-      let canvas = this.$refs.canvas
-      this.ctx = canvas.getContext("2d")
-      canvas.width = this.imgSize.width
-      canvas.height = this.imgSize.height
-      this.drawImg(this.img)
+    getBase64 (img) {
+      let canvas = document.createElement('canvas')
+      let ctx = canvas.getContext("2d")
+      canvas.width = img.width
+      canvas.height = img.height
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
       if (this.drawType === 1) {
-        this.drawLine(this.ctx, this.line.StartPoint, this.line.EndPoint, this.imgSize, this.lineWidth, this.lineColor)
-        let {width, height} = this.imgSize
+        this.drawLine(ctx, this.line.StartPoint, this.line.EndPoint, img, this.lineWidth, this.lineColor)
+        let {width, height} = img
          let start = this.direction.StartPoint
         let end = this.direction.EndPoint
         start = { x: start.x * width, y: start.y * height}
         end = { x: end.x * width, y: end.y * height}
-        this.drawArrow(this.ctx, start.x, start.y, end.x, end.y, 30, 10, this.lineWidth, this.lineColor, false, true)
+        this.drawArrow(ctx, start.x, start.y, end.x, end.y, 30, 10, this.lineWidth, this.lineColor, false, true)
       } 
       if (this.drawType === 2) {
-        this.drawPolyLine(this.ctx, this.polyLine, this.imgSize, this.lineWidth, this.lineColor)
+        this.drawPolyLine(ctx, this.polyLine, this.imgSize, this.lineWidth, this.lineColor)
         let {width, height} = this.imgSize
         let start = this.direction.StartPoint
         let end = this.direction.EndPoint
         start = { x: start.x * width, y: start.y * height}
         end = { x: end.x * width, y: end.y * height}
-        /* eslint-disable */
-        console.log(start, end)
-        this.drawArrow(this.ctx, start.x, start.y, end.x, end.y, 30, 10, this.lineWidth, this.lineColor, false, true)
+        this.drawArrow(ctx, start.x, start.y, end.x, end.y, 30, 10, this.lineWidth, this.lineColor, false, true)
       }
-      return this
-    },
-    
-    // 上图
-    drawImg(img) {
-      if(!this.ctx) return
-      this.ctx.drawImage(img, 0, 0, img.width, img.height)
-      return this
+      // 注意这里的图片一定是同域的， 不然就要求图片服务器允许跨域访问，不然会因为安全问题报错
+      return canvas.toDataURL("image/jpeg", 1)
     },
     // 绘制直线
     drawLine (ctx, start, end, imgSize, width, color) {
@@ -145,17 +153,23 @@ export default {
       ctx.stroke()
       ctx.closePath()
     },
-    // 加载图片
-    loadImg (src) {
-      let img = this.img = document.createElement('img')
-      img.src = src
-      img.onload = () => {
-        this.imgSize = { 
-          width: img.width,
-          height: img.height
+    // 计算图片渲染宽高
+    calcRenderSize(outWidth, outHeight, actualWidth, actualHeight) {
+      let imgSize = {}
+      if (actualWidth <= outWidth && actualHeight <= outHeight) { // 图片实际宽高都小于等于布局宽高
+        imgSize = { width: actualWidth, height: actualHeight }
+      } else if (actualWidth > outWidth || actualHeight > outHeight) { // 图片实际宽高都大于布局宽高
+        if (outWidth / outHeight >= actualWidth / actualHeight) { // 如果布局斜率大于等于实际图片斜率, 则以布局高为图片高, 图片宽同比缩小
+          imgSize = {width: outHeight / actualHeight * actualWidth  , height: outHeight}
+        } else { // 如果布局斜率小于实际图片大小, 则以布局宽为图片宽, 图片高同比缩小
+          imgSize = {width: outWidth  , height: outWidth / actualWidth * actualHeight}
         }
-        this.creatCanvas = true
+      } else if (actualWidth > outWidth) {  // 图片实际宽大于布局宽
+        imgSize = {width: outWidth  , height: outWidth / actualWidth * actualHeight}
+      } else { // 图片实际高大于布局高
+        imgSize = {width: outHeight / actualHeight * actualWidth  , height: outHeight}
       }
+      return imgSize
     },
     // 绘制箭头
     drawArrow (ctx, fromX, fromY, toX, toY, theta, headlen, width, color, startArrow, endArrow) { 

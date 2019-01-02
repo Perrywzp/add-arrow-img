@@ -1,7 +1,7 @@
 {
   "name": "add-arrow-img",
-  "version": "0.1.0",
-  "main": "./dist/led-screen-set.common.js",
+  "version": "0.1.2",
+  "main": "./dist/add-arrow-img.common.js",
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
